@@ -548,6 +548,8 @@ services:
     volumes:
       - dify_agent_local_sandbox_home:/home/dify
       - dify_agent_local_sandbox_workspace:/workspace
+      # Shared with browsermesh: write a login state here, then open a browser session with that stateId.
+      - browsermesh_states:/browser-states
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5004/healthz"]
       interval: 30s
@@ -793,32 +795,17 @@ services:
 
   # OceanBase vector database
 
-  # Playwright MCP: headless browser the Dify test agent drives. No auth, so internal network only.
-  playwright_mcp:
-    image: mcr.microsoft.com/playwright/mcp:v0.0.83
+  # BrowserMesh: headless browser the Dify test agent drives, with one session per run that survives between tool calls.
+  # No auth, so internal network only: reached as http://browsermesh:8932/mcp from inside the stack, never exposed.
+  browsermesh:
+    build:
+      context: ./browsermesh
     restart: always
     init: true
     shm_size: "1gb"
-    entrypoint: ["node", "/app/cli.js"]
-    command:
-      - --headless
-      - --browser
-      - chromium
-      - --no-sandbox
-      - --host
-      - 0.0.0.0
-      - --port
-      - "8931"
-      # Reached as playwright_mcp:8931 from inside the stack, never exposed.
-      - --allowed-hosts
-      - "*"
-      - --isolated
-      # Keep one browser across tool calls so pages survive between steps.
-      - --shared-browser-context
-      - --viewport-size
-      - 1440x900
-      - --timeout-action
-      - "15000"
+    volumes:
+      # Login states (Playwright storageState JSON). The agent sandbox writes them, sessions load them by stateId.
+      - browsermesh_states:/data/states
     networks:
       - default
 
@@ -851,3 +838,4 @@ volumes:
   dify_es01_data:
   dify_agent_local_sandbox_home:
   dify_agent_local_sandbox_workspace:
+  browsermesh_states:
