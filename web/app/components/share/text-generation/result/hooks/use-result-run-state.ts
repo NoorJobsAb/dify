@@ -1,4 +1,4 @@
-import type { Dispatch, MutableRefObject, SetStateAction } from 'react'
+import type { Dispatch, RefObject, SetStateAction } from 'react'
 import type { FeedbackType } from '@/app/components/base/chat/chat/type'
 import type { WorkflowProcess } from '@/app/components/base/chat/types'
 import { useBoolean } from 'ahooks'
@@ -40,7 +40,7 @@ type UseResultRunStateOptions = {
 }
 
 export type ResultRunStateController = {
-  abortControllerRef: MutableRefObject<AbortController | null>
+  abortControllerRef: RefObject<AbortController | null>
   clearMoreLikeThis: () => void
   completionRes: string
   controlClearMoreLikeThis: number
@@ -158,9 +158,10 @@ export const useResultRunState = ({
 
   const handleFeedback = useCallback(
     async (nextFeedback: FeedbackType) => {
+      if (!messageId) return
       await updateFeedback(
         {
-          url: `/messages/${messageId}/feedbacks`,
+          messageId,
           body: {
             rating: nextFeedback.rating,
             content: nextFeedback.content,
@@ -188,8 +189,14 @@ export const useResultRunState = ({
     const abortController = abortControllerRef.current
     setIsStopping(true)
     try {
-      if (isWorkflow) await stopWorkflowMessage(appId!, currentTaskId, appSourceType, appId || '')
-      else await stopChatMessageResponding(appId!, currentTaskId, appSourceType, appId || '')
+      if (isWorkflow)
+        await stopWorkflowMessage(appId!, currentTaskId, appSourceType, appId || '', {
+          silent: true,
+        })
+      else
+        await stopChatMessageResponding(appId!, currentTaskId, appSourceType, appId || '', {
+          silent: true,
+        })
 
       if (isCurrentRequest()) abortController?.abort()
     } catch (error) {

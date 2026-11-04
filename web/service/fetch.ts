@@ -9,11 +9,11 @@ import {
   CSRF_COOKIE_NAME,
   CSRF_HEADER_NAME,
   IS_MARKETPLACE,
-  MARKETPLACE_API_PREFIX,
   PASSPORT_HEADER_NAME,
   PUBLIC_API_PREFIX,
   WEB_APP_SHARE_CODE_HEADER_NAME,
 } from '@/config'
+import { MARKETPLACE_API_PREFIX } from '@/features/marketplace/api'
 import { shouldSuppressAppDeletionErrorToast } from './app-deletion'
 import { httpErrorFromResponse, isHttpErrorStatus } from './http-error'
 import { clearRequestErrorToasts, notifyRequestError } from './request-error-toast'
@@ -110,6 +110,7 @@ export const getBaseOptions = (): RequestInit => ({
   redirect: 'follow',
 })
 
+/** @deprecated Use generated contract clients for new APIs. Special transports require a scoped lint exception. */
 async function base<T>(
   url: string,
   options: FetchOptionType = {},
@@ -183,7 +184,7 @@ async function base<T>(
     },
   })
 
-  const res = await client(request || fetchPathname, {
+  const res = await client(request ? request.clone() : fetchPathname, {
     ...init,
     headers,
     credentials: isMarketplaceAPI ? 'omit' : options.credentials || 'include',
@@ -221,6 +222,7 @@ async function base<T>(
  * Includes credentials, Authorization (if available), and CSRF header
  * so the request is authenticated, matching the headers sent by the
  * standard `base()` fetch wrapper.
+ * @deprecated New keepalive transports require a scoped lint exception.
  */
 export function postWithKeepalive(url: string, body: Record<string, unknown>): void {
   const headers = new Headers({
