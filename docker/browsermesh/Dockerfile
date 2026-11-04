@@ -6,5 +6,6 @@ RUN npm install -g multi-agent-browser-mcp@0.1.5 \
 RUN python3 -m venv /opt/proxy && /opt/proxy/bin/pip install --no-cache-dir mcp-proxy==0.14.0
 ENV BROWSERMESH_HEADLESS=true BROWSERMESH_DATA_DIR=/data BROWSERMESH_LOG_LEVEL=warn
 EXPOSE 8932
+# mcp-proxy answers 421 to any Host but loopback, so allow the service name Dify calls.
 # The agent sandbox writes login states into /data/states as another user, so the folder is world-writable (sticky).
-CMD ["sh", "-c", "mkdir -p /data/states && chmod 1777 /data/states && exec /opt/proxy/bin/mcp-proxy --host 0.0.0.0 --port 8932 --pass-environment -- browsermesh"]
+CMD ["sh", "-c", "mkdir -p /data/states && chmod 1777 /data/states && exec /opt/proxy/bin/mcp-proxy --host 0.0.0.0 --port 8932 --allowed-host browsermesh --allowed-host browsermesh:8932 --pass-environment -- browsermesh"]
