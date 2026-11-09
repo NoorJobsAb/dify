@@ -541,7 +541,7 @@ services:
       HTTPS_PROXY: http://agent_ssrf_proxy:3128
       NO_PROXY: localhost,127.0.0.1
       DOTNET_ROOT: /opt/dify-agent-tools/dotnet
-      PATH: /opt/dify-agent-tools/dotnet:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+      PATH: /opt/dify-agent-tools/bin:/opt/dify-agent-tools/dotnet:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
       LD_LIBRARY_PATH: /opt/dify-agent-tools/icu
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
@@ -831,7 +831,7 @@ services:
     command:
     - sh
     - -c
-    - "if apt-get update -qq &&\n   apt-get install -y -qq --no-install-recommends ca-certificates curl libicu72 > /dev/null &&\n   cd /opt/dify-agent-tools && rm -rf dotnet.new icu.new && mkdir dotnet.new icu.new &&\n   curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh &&\n   bash /tmp/dotnet-install.sh --channel LTS --install-dir /opt/dify-agent-tools/dotnet.new &&\n   cp -a /usr/lib/x86_64-linux-gnu/libicu*.so.72* icu.new/ &&\n   rm -rf dotnet icu && mv dotnet.new dotnet && mv icu.new icu && chmod -R a+rX /opt/dify-agent-tools\nthen echo \"sandbox_tools: ready\"\nelse echo \"sandbox_tools: install failed; keeping the previous tools\"\nfi\nexit 0\n"
+    - "if apt-get update -qq &&\n   apt-get install -y -qq --no-install-recommends ca-certificates curl libicu72 > /dev/null &&\n   cd /opt/dify-agent-tools && rm -rf dotnet.new icu.new bin.new && mkdir dotnet.new icu.new bin.new &&\n   curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh &&\n   bash /tmp/dotnet-install.sh --channel LTS --install-dir /opt/dify-agent-tools/dotnet.new &&\n   cp -a /usr/lib/x86_64-linux-gnu/libicu*.so.72* icu.new/ &&\n   printf '%s\\n' '#!/bin/sh' 'mkdir -p \"$$HOME/.dotnet/corefx/Runtime/SharedMemory/.dotnet/shm\" 2>/dev/null' 'exec /opt/dify-agent-tools/dotnet/dotnet \"$$@\"' > bin.new/dotnet &&\n   rm -rf dotnet icu bin && mv dotnet.new dotnet && mv icu.new icu && mv bin.new bin &&\n   chmod -R a+rX /opt/dify-agent-tools && chmod 755 bin/dotnet\nthen echo \"sandbox_tools: ready\"\nelse echo \"sandbox_tools: install failed; keeping the previous tools\"\nfi\nexit 0\n"
     volumes:
     - sandbox_tools:/opt/dify-agent-tools
     networks:
