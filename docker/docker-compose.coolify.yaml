@@ -701,6 +701,7 @@ services:
       DIFY_AGENT_SANDBOX_FILES_BASE_URL: ${DIFY_AGENT_SANDBOX_FILES_BASE_URL:-http://api:5001}
       DIFY_AGENT_STUB_API_BASE_URL: ${DIFY_AGENT_STUB_API_BASE_URL:-http://agent_backend:5050/agent-stub}
       DIFY_AGENT_SERVER_SECRET_KEY: ${DIFY_AGENT_SERVER_SECRET_KEY:-MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY}
+      DIFY_AGENT_SHELL_REDACT_PATTERNS: '["gh[pousr]_[A-Za-z0-9]{36,}", "github_pat_[A-Za-z0-9_]{20,}", "npm_[A-Za-z0-9]{36,}"]'
       DIFY_AGENT_LOCAL_SANDBOX_AUTH_TOKEN: ${DIFY_AGENT_LOCAL_SANDBOX_AUTH_TOKEN:-${DIFY_AGENT_SHELLCTL_AUTH_TOKEN:-}}
     depends_on:
       redis:
@@ -831,7 +832,7 @@ services:
     command:
     - sh
     - -c
-    - "if apt-get update -qq &&\n   apt-get install -y -qq --no-install-recommends ca-certificates curl libicu72 > /dev/null &&\n   cd /opt/dify-agent-tools && rm -rf dotnet.new icu.new bin.new && mkdir dotnet.new icu.new bin.new &&\n   curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh &&\n   bash /tmp/dotnet-install.sh --channel LTS --install-dir /opt/dify-agent-tools/dotnet.new &&\n   cp -a /usr/lib/x86_64-linux-gnu/libicu*.so.72* icu.new/ &&\n   printf '%s\\n' '#!/bin/sh' 'mkdir -p \"$$HOME/.dotnet/corefx/Runtime/SharedMemory/.dotnet/shm\" 2>/dev/null' 'exec /opt/dify-agent-tools/dotnet/dotnet \"$$@\"' > bin.new/dotnet &&\n   rm -rf dotnet icu bin && mv dotnet.new dotnet && mv icu.new icu && mv bin.new bin &&\n   chmod -R a+rX /opt/dify-agent-tools && chmod 755 bin/dotnet\nthen echo \"sandbox_tools: ready\"\nelse echo \"sandbox_tools: install failed; keeping the previous tools\"\nfi\nexit 0\n"
+    - "if apt-get update -qq &&\n   apt-get install -y -qq --no-install-recommends ca-certificates curl libicu72 > /dev/null &&\n   cd /opt/dify-agent-tools && rm -rf dotnet.new icu.new bin.new && mkdir dotnet.new icu.new bin.new &&\n   curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh &&\n   bash /tmp/dotnet-install.sh --channel 8.0 --install-dir /opt/dify-agent-tools/dotnet.new > /dev/null &&\n   bash /tmp/dotnet-install.sh --channel 9.0 --install-dir /opt/dify-agent-tools/dotnet.new > /dev/null &&\n   bash /tmp/dotnet-install.sh --channel 10.0 --install-dir /opt/dify-agent-tools/dotnet.new > /dev/null &&\n   bash /tmp/dotnet-install.sh --version 10.0.401 --install-dir /opt/dify-agent-tools/dotnet.new > /dev/null &&\n   bash /tmp/dotnet-install.sh --runtime dotnet --channel 6.0 --install-dir /opt/dify-agent-tools/dotnet.new > /dev/null &&\n   bash /tmp/dotnet-install.sh --runtime aspnetcore --channel 6.0 --install-dir /opt/dify-agent-tools/dotnet.new > /dev/null &&\n   cp -a /usr/lib/x86_64-linux-gnu/libicu*.so.72* icu.new/ &&\n   printf '%s\\n' '#!/bin/sh' 'mkdir -p \"$$HOME/.dotnet/corefx/Runtime/SharedMemory/.dotnet/shm\" 2>/dev/null' 'exec /opt/dify-agent-tools/dotnet/dotnet \"$$@\"' > bin.new/dotnet &&\n   rm -rf dotnet icu bin && mv dotnet.new dotnet && mv icu.new icu && mv bin.new bin &&\n   chmod -R a+rX /opt/dify-agent-tools && chmod 755 bin/dotnet\nthen echo \"sandbox_tools: ready\"\nelse echo \"sandbox_tools: install failed; keeping the previous tools\"\nfi\nexit 0\n"
     volumes:
     - sandbox_tools:/opt/dify-agent-tools
     networks:
