@@ -532,15 +532,24 @@ services:
     - 0.0.0.0:5004
     - --require-auth-token
     restart: always
+    depends_on:
+      sandbox_tools:
+        condition: service_completed_successfully
     environment:
       SHELLCTL_AUTH_TOKEN: ${DIFY_AGENT_LOCAL_SANDBOX_AUTH_TOKEN:-${DIFY_AGENT_SHELLCTL_AUTH_TOKEN:-}}
       HTTP_PROXY: http://agent_ssrf_proxy:3128
       HTTPS_PROXY: http://agent_ssrf_proxy:3128
       NO_PROXY: localhost,127.0.0.1
+      DOTNET_ROOT: /opt/tools/dotnet
+      PATH: /opt/tools/dotnet:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+      LD_LIBRARY_PATH: /opt/tools/icu
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      DOTNET_NOLOGO: '1'
     volumes:
     - dify_agent_local_sandbox_home:/home/dify
     - dify_agent_local_sandbox_workspace:/workspace
     - browsermesh_states:/browser-states
+    - sandbox_tools:/opt/tools:ro
     healthcheck:
       test:
       - CMD
@@ -816,6 +825,17 @@ services:
     - browsermesh_states:/data/states
     networks:
     - default
+  sandbox_tools:
+    image: debian:bookworm-slim
+    restart: 'no'
+    command:
+    - sh
+    - -c
+    - "if apt-get update -qq &&\n   apt-get install -y -qq --no-install-recommends ca-certificates curl libicu72 > /dev/null &&\n   cd /opt/tools && rm -rf dotnet.new icu.new && mkdir dotnet.new icu.new &&\n   curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh &&\n   bash /tmp/dotnet-install.sh --channel LTS --install-dir /opt/tools/dotnet.new &&\n   cp -a /usr/lib/x86_64-linux-gnu/libicu*.so.72* icu.new/ &&\n   rm -rf dotnet icu && mv dotnet.new dotnet && mv icu.new icu && chmod -R a+rX /opt/tools\nthen echo \"sandbox_tools: ready\"\nelse echo \"sandbox_tools: install failed; keeping the previous tools\"\nfi\nexit 0\n"
+    volumes:
+    - sandbox_tools:/opt/tools
+    networks:
+    - default
 networks:
   ssrf_proxy_network:
     driver: bridge
@@ -837,3 +857,4 @@ volumes:
   dify_agent_local_sandbox_home: null
   dify_agent_local_sandbox_workspace: null
   browsermesh_states: null
+  sandbox_tools: null
