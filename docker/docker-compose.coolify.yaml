@@ -549,6 +549,7 @@ services:
       LD_LIBRARY_PATH: /opt/dify-agent-tools/icu
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
+      BOARD_BOT_PAT: ${BOARD_BOT_PAT:-}
     volumes:
     - dify_agent_local_sandbox_home:/home/dify
     - dify_agent_local_sandbox_workspace:/workspace
