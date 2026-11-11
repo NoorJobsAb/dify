@@ -104,6 +104,8 @@ services:
       SENTRY_DSN: ${API_SENTRY_DSN:-}
       SENTRY_PROFILES_SAMPLE_RATE: ${API_SENTRY_PROFILES_SAMPLE_RATE:-1.0}
       SENTRY_TRACES_SAMPLE_RATE: ${API_SENTRY_TRACES_SAMPLE_RATE:-1.0}
+      WORKFLOW_MAX_EXECUTION_TIME: '3600'
+      APP_MAX_EXECUTION_TIME: '3600'
       MODE: api
     depends_on:
       init_permissions:
@@ -310,6 +312,8 @@ services:
       SENTRY_DSN: ${API_SENTRY_DSN:-}
       SENTRY_PROFILES_SAMPLE_RATE: ${API_SENTRY_PROFILES_SAMPLE_RATE:-1.0}
       SENTRY_TRACES_SAMPLE_RATE: ${API_SENTRY_TRACES_SAMPLE_RATE:-1.0}
+      WORKFLOW_MAX_EXECUTION_TIME: '3600'
+      APP_MAX_EXECUTION_TIME: '3600'
       MODE: worker
     depends_on:
       init_permissions:
@@ -545,6 +549,7 @@ services:
       LD_LIBRARY_PATH: /opt/dify-agent-tools/icu
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
+      BOARD_BOT_PAT: ${BOARD_BOT_PAT:-}
     volumes:
     - dify_agent_local_sandbox_home:/home/dify
     - dify_agent_local_sandbox_workspace:/workspace
@@ -701,7 +706,8 @@ services:
       DIFY_AGENT_SANDBOX_FILES_BASE_URL: ${DIFY_AGENT_SANDBOX_FILES_BASE_URL:-http://api:5001}
       DIFY_AGENT_STUB_API_BASE_URL: ${DIFY_AGENT_STUB_API_BASE_URL:-http://agent_backend:5050/agent-stub}
       DIFY_AGENT_SERVER_SECRET_KEY: ${DIFY_AGENT_SERVER_SECRET_KEY:-MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY}
-      DIFY_AGENT_SHELL_REDACT_PATTERNS: '["gh[pousr]_[A-Za-z0-9]{36,}", "github_pat_[A-Za-z0-9_]{20,}", "npm_[A-Za-z0-9]{36,}"]'
+      DIFY_AGENT_RUN_TIMEOUT_SECONDS: '3300'
+      DIFY_AGENT_SHELL_REDACT_PATTERNS: '["gh[pousr]_[A-Za-z0-9]{36,}", "github_pat_[A-Za-z0-9_]{20,}", "npm_[A-Za-z0-9]{36,}", "eC1hY2Nlc3MtdG9rZW46[A-Za-z0-9+/=]+"]'
       DIFY_AGENT_LOCAL_SANDBOX_AUTH_TOKEN: ${DIFY_AGENT_LOCAL_SANDBOX_AUTH_TOKEN:-${DIFY_AGENT_SHELLCTL_AUTH_TOKEN:-}}
     depends_on:
       redis:
