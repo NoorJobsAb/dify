@@ -866,6 +866,21 @@ services:
     - browsermesh_states:/data/states
     networks:
     - default
+  figma-mcp:
+    image: node:24-bookworm-slim
+    restart: always
+    init: true
+    command:
+    - npx
+    - -y
+    - figma-developer-mcp@0.13.2
+    environment:
+      FRAMELINK_HOST: 0.0.0.0
+      FRAMELINK_PORT: '3333'
+      SKIP_IMAGE_DOWNLOADS: 'true'
+      FRAMELINK_TELEMETRY: 'off'
+    networks:
+    - default
   sandbox_tools:
     image: debian:bookworm-slim
     restart: 'no'
