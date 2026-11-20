@@ -581,6 +581,7 @@ services:
       DOTNET_NOLOGO: '1'
       BOARD_BOT_PAT: ${BOARD_BOT_PAT:-}
       SHELLCTL_LANDLOCK_RO_PATHS: /usr,/bin,/sbin,/lib,/lib64,/etc,/proc,/opt/dify-agent-tools,/opt/homebrew,/snap,/figma-images
+      SHELLCTL_LANDLOCK_RW_PATHS: /browser-states
     volumes:
     - dify_agent_local_sandbox_home:/home/dify
     - dify_agent_local_sandbox_workspace:/workspace
@@ -873,9 +874,15 @@ services:
     restart: always
     init: true
     command:
-    - npx
-    - -y
-    - figma-developer-mcp@0.13.2
+    - sh
+    - -c
+    - '# Each agent run copies its downloads out right away, so anything a day old is left over.
+
+      while :; do find /data/images -mindepth 1 -mmin +1440 -delete 2>/dev/null; sleep 3600; done &
+
+      exec npx -y figma-developer-mcp@0.13.2
+
+      '
     environment:
       FRAMELINK_HOST: 0.0.0.0
       FRAMELINK_PORT: '3333'
