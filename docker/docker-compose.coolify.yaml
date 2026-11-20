@@ -779,16 +779,16 @@ services:
     - sh
     - -c
     - "cp /dify-ssrf/squid.conf.template /etc/squid/squid.conf.template && cp /dify-ssrf/squid-common.conf.template /etc/squid/dify_common.conf.template && cp /dify-ssrf/docker-entrypoint.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh"
-    networks:
-    - ssrf_proxy_network
-    - default
     environment:
       SSRF_HTTP_PORT: ${SSRF_HTTP_PORT:-3128}
       SSRF_COREDUMP_DIR: ${SSRF_COREDUMP_DIR:-/var/spool/squid}
       SSRF_PROXY_ALLOW_PRIVATE_IPS: ${SSRF_PROXY_ALLOW_PRIVATE_IPS:-}
-      SSRF_PROXY_ALLOW_PRIVATE_DOMAINS: ${SSRF_PROXY_ALLOW_PRIVATE_DOMAINS:-}
+      SSRF_PROXY_ALLOW_PRIVATE_DOMAINS: figma-mcp,${SSRF_PROXY_ALLOW_PRIVATE_DOMAINS:-}
       COREDUMP_DIR: ${SSRF_COREDUMP_DIR:-/var/spool/squid}
       HTTP_PORT: ${SSRF_HTTP_PORT:-3128}
+    networks:
+    - ssrf_proxy_network
+    - default
   nginx:
     image: nginx:latest
     restart: always
