@@ -580,11 +580,13 @@ services:
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
       BOARD_BOT_PAT: ${BOARD_BOT_PAT:-}
+      SHELLCTL_LANDLOCK_RO_PATHS: /usr,/bin,/sbin,/lib,/lib64,/etc,/proc,/opt/dify-agent-tools,/opt/homebrew,/snap,/figma-images
     volumes:
     - dify_agent_local_sandbox_home:/home/dify
     - dify_agent_local_sandbox_workspace:/workspace
     - browsermesh_states:/browser-states
     - sandbox_tools:/opt/dify-agent-tools:ro
+    - figma_images:/figma-images:ro
     healthcheck:
       test:
       - CMD
@@ -877,8 +879,10 @@ services:
     environment:
       FRAMELINK_HOST: 0.0.0.0
       FRAMELINK_PORT: '3333'
-      SKIP_IMAGE_DOWNLOADS: 'true'
+      IMAGE_DIR: /data/images
       FRAMELINK_TELEMETRY: 'off'
+    volumes:
+    - figma_images:/data/images
     networks:
     - default
   sandbox_tools:
@@ -914,3 +918,4 @@ volumes:
   dify_agent_local_sandbox_workspace: null
   browsermesh_states: null
   sandbox_tools: null
+  figma_images: null
