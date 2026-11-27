@@ -581,12 +581,7 @@ services:
       FONTCONFIG_FILE: /opt/dify-agent-tools/browser-lib/fonts.conf
       DOTNET_CLI_TELEMETRY_OPTOUT: '1'
       DOTNET_NOLOGO: '1'
-      BOARD_BOT_PAT: ${BOARD_BOT_PAT:-}
       BOARD_PACKAGES_TOKEN: ${BOARD_PACKAGES_TOKEN:-}
-      DOPPLER_TOKEN: ${DOPPLER_TOKEN:-}
-      DOPPLER_ENABLE_VERSION_CHECK: 'false'
-      ALPHA_TEST_EMAIL: ${ALPHA_TEST_EMAIL:-}
-      ALPHA_TEST_PASSWORD: ${ALPHA_TEST_PASSWORD:-}
       BOARD_RUN_SECONDS: ${DIFY_AGENT_RUN_TIMEOUT_SECONDS:-3300}
       NPM_CONFIG_USERCONFIG: /opt/dify-agent-tools/pkg-auth/npmrc
       NUGET_COMMON_APPLICATION_DATA: /opt/dify-agent-tools/pkg-auth
