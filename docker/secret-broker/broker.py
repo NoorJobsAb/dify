@@ -84,13 +84,37 @@ def parse_ref_updates(body):
         i += size
 
 
-def push_refusal(scope, repo, updates):
-    for _, new, ref in updates:
-        if new == ZERO:
-            return f"deleting {ref} is not allowed"
-        if not ref.startswith("refs/heads/") or (repo, ref[len("refs/heads/"):]) not in scope["push"]:
-            return f"pushing {ref} to {repo} is not allowed"
+def ref_refusal(scope, repo, update):
+    _, new, ref = update
+    if not any(r == repo for r, _ in scope["push"]):
+        return f"{repo} is not open for push"
+    if new == ZERO:
+        return f"deleting {ref} is not allowed"
+    if not ref.startswith("refs/heads/") or (repo, ref[len("refs/heads/"):]) not in scope["push"]:
+        return f"pushing {ref} to {repo} is not allowed"
     return None
+
+
+def push_refusal(scope, repo, updates):
+    return next((r for u in updates if (r := ref_refusal(scope, repo, u))), None)
+
+
+def push_capabilities(body):
+    """The capabilities after the NUL of the first command pkt-line (the body is already parsed)."""
+    line = body[4:int(body[:4], 16)]
+    return set(line.split(b"\0", 1)[1].decode().split()) if b"\0" in line else set()
+
+
+def pkt(data):
+    return b"%04x" % (len(data) + 4) + data
+
+
+def push_report(updates, reasons, sideband):
+    """A receive-pack status report that refuses every ref; git prints each as "! [remote rejected] <ref> (<reason>)"."""
+    report = pkt(b"unpack ok\n") + b"".join(
+        pkt(f"ng {ref} {reason or 'refused with the rest of this push'}\n".encode())
+        for (_, _, ref), reason in zip(updates, reasons)) + b"0000"
+    return pkt(b"\x01" + report) + b"0000" if sideband else report
 
 
 class Tickets:
@@ -136,7 +160,7 @@ def make_server(env, port=PORT):
             pass  # the default line carries the request path, which can hold a ticket
 
         def _send(self, status, body="", ctype="text/plain"):
-            body = body.encode()
+            body = body.encode() if isinstance(body, str) else body
             self.send_response(status)
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
@@ -221,16 +245,27 @@ def make_server(env, port=PORT):
                 return self._send(400, "unreadable request body")
             push, ref = service == "git-receive-pack", "-"
             if push:
-                refusal = None if any(r == repo for r, _ in scope["push"]) else f"{repo} is not open for push"
-                if refusal is None and body is not None:
+                refusal, caps = None, set()
+                if body is None:
+                    if not any(r == repo for r, _ in scope["push"]):
+                        refusal = f"{repo} is not open for push"
+                else:
                     try:
-                        updates = parse_ref_updates(self._decoded(body))
-                        ref = ",".join(u[2] for u in updates) or "-"
-                        refusal = push_refusal(scope, repo, updates)
+                        decoded = self._decoded(body)
+                        updates = parse_ref_updates(decoded)
+                        caps = push_capabilities(decoded) if updates else set()
                     except ValueError:
                         refusal = "unreadable push request"
+                    else:
+                        ref = ",".join(u[2] for u in updates) or "-"
+                        reasons = [ref_refusal(scope, repo, u) for u in updates]
+                        refusal = next((r for r in reasons if r), None)
                 if refusal:
                     log("git", repo, ref, "denied", 403)
+                    if caps & {"report-status", "report-status-v2"}:
+                        # a 403 here reaches the agent only as "RPC failed"; a status report shows the reason
+                        report = push_report(updates, reasons, bool(caps & {"side-band", "side-band-64k"}))
+                        return self._send(200, report, "application/x-git-receive-pack-result")
                     return self._send(403, refusal + "\n")
             self._forward(f"/{owner}/{name}.git/{rest}", body, push or repo in scope["read"], repo, ref)
 
