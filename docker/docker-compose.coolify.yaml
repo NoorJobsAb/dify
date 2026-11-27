@@ -9,8 +9,8 @@
 #   their config folder read-only and copy the files in.
 # - TLS is terminated by the Coolify proxy: no published nginx ports and no certificate mounts.
 # - browsermesh: headless browser the Dify test agent drives over MCP (http://browsermesh:8932/mcp).
-#   No auth, so internal network only; never give it a domain. local_sandbox shares browsermesh_states
-#   at /browser-states to write login states that browser sessions load by stateId.
+#   No auth, so internal network only; never give it a domain. Its login states (browsermesh_states) stay
+#   in its own container; local_sandbox does not mount them.
 
 services:
   init_permissions:
@@ -586,11 +586,9 @@ services:
       NPM_CONFIG_USERCONFIG: /opt/dify-agent-tools/pkg-auth/npmrc
       NUGET_COMMON_APPLICATION_DATA: /opt/dify-agent-tools/pkg-auth
       SHELLCTL_LANDLOCK_RO_PATHS: /usr,/bin,/sbin,/lib,/lib64,/etc,/proc,/opt/dify-agent-tools,/opt/homebrew,/snap,/figma-images
-      SHELLCTL_LANDLOCK_RW_PATHS: /browser-states
     volumes:
     - dify_agent_local_sandbox_home:/home/dify
     - dify_agent_local_sandbox_workspace:/workspace
-    - browsermesh_states:/browser-states
     - sandbox_tools:/opt/dify-agent-tools:ro
     - figma_images:/figma-images:ro
     healthcheck:
